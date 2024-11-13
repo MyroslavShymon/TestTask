@@ -1,0 +1,52 @@
+version: '3'
+services:
+  # Users Service
+  users-service:
+    build:
+      context: ./users-service
+      dockerfile: ${DOCKERFILE:-Dockerfile}
+    env_file:
+      - ./.env.${NODE_ENV}
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./users-service:/app
+      - /app/node_modules
+    depends_on:
+      - db
+      - rabbitmq
+
+  # Notifications Service
+  notifications-service:
+    build:
+      context: ./notifications-service
+      dockerfile: ${DOCKERFILE:-Dockerfile}
+    env_file:
+      - ./.env.${NODE_ENV}
+    ports:
+      - "3002:3002"
+    volumes:
+      - ./notifications-service:/app
+      - /app/node_modules
+    depends_on:
+      - rabbitmq
+
+  # RabbitMQ Service
+  rabbitmq:
+    image: "rabbitmq:3-management"
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+  # Database Service
+  db:
+    image: postgres:13
+    env_file:
+      - ./.env.${NODE_ENV}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
